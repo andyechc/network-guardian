@@ -1,29 +1,24 @@
 # Project Plan
 
-Create a pure KMP module named 'network-guard' with no UI dependencies. It should use Ktor Core and Coroutines. Implement a SafeApiCall mapping Throwables from iOS and Android to a Sealed Interface (Success/Error) with clean, configurable error strings. The project should be ready for JitPack (Git: https://github.com/andyechc/network-guardian.git).
+Extend the Network Guardian project to include a 'NetworkTestScreen' in the `composeApp`. This screen will be used to verify that the `safeApiCall` correctly maps exceptions (like `NSURLError` on iOS and `IOException` on Android) to clean, user-friendly strings. The component should be isolated from the core library logic.
 
 ## Project Brief
 
-# Project Brief: Network Guardian (`network-guard`)
+# Project Brief: Network Guardian (`network-guard`) - Extension
 
+The project now includes a requirement for a "Debug/Test" UI component that demonstrates the library's functionality, specifically targeting error message verification on iOS and Android.
 
-Network Guardian is a pure Kotlin Multiplatform (KMP) library designed to provide a robust, resilient layer for network operations. It abstracts the complexities of cross-platform error handling, ensuring that both Android and iOS applications can handle API responses consistently and gracefully.
-
-## Features
-
-*   **Safe API Call Wrapper**: A standardized `safeApiCall` function that executes network requests and automatically catches exceptions, returning a structured `Result` type.
-*   **Unified Error Mapping**: Automatically maps platform-specific exceptions (e.g., Android's `IOException` or iOS's `NSURLError`) into a shared `Sealed Interface` with `Success` and `Error` states.
-*   **Configurable Error Strings**: Support for injecting custom error message providers, allowing developers to define clean, user-friendly strings for different error scenarios (Timeout, No Connection, Server Error).
-*   **Pure KMP Architecture**: A UI-agnostic module built strictly for the data layer, ensuring maximum portability and zero overhead for consumer applications.
-*   **JitPack Ready**: Pre-configured build scripts for seamless publishing and integration via JitPack.
+## Features to Add:
+*   **Debug UI Component**: A screen in the `composeApp` (or a sample module) that:
+    *   Triggers a network call using `safeApiCall`.
+    *   Targets a URL guaranteed to fail (e.g., non-existent or 404).
+    *   Displays the resulting `NetworkResult.Error` message.
+*   **Production Safety**: Ensure this code is isolated and doesn't clutter the core library module.
 
 ## High-Level Technical Stack
-
-*   **Kotlin Multiplatform**: To share core logic across Android and iOS.
-*   **Ktor Core**: For multiplatform asynchronous network requests.
-*   **Kotlin Coroutines**: To manage asynchronous execution and thread safety across platforms.
-*   **KSP (Kotlin Symbol Processing)**: For efficient, low-overhead code generation and metadata processing.
-*   **Gradle**: Configured with the Maven Publish plugin for JitPack compatibility.
+*   **Compose Multiplatform**: For the UI.
+*   **Ktor**: To trigger the test requests.
+*   **Kotlin Multiplatform**: To ensure the test works on both Android and iOS.
 
 ## Implementation Steps
 
@@ -60,5 +55,23 @@ Network Guardian is a pure Kotlin Multiplatform (KMP) library designed to provid
   - All existing tests pass
   - App does not crash
   - Pure KMP architecture is maintained
+
+### Task_5_ImplementDebugUI: Implement 'NetworkTestScreen' in the 'composeApp'. Add a button to trigger a failing Ktor request using 'safeApiCall' and display the resulting clean error message in the UI. Ensure 'composeApp' correctly depends on 'network-guard'.
+- **Status:** COMPLETED
+- **Updates:** Implemented 'NetworkTestScreen' in the 'composeApp'. Added a button to trigger a failing Ktor request using 'safeApiCall' and display the resulting clean error message in the UI. Ensure 'composeApp' correctly depends on 'network-guard'. Verified that 'composeApp' has a dependency on 'network-guard', 'NetworkTestScreen' is implemented in commonMain, failing request triggers 'safeApiCall', and error message is visible in the UI.
+- **Acceptance Criteria:**
+  - 'composeApp' has a dependency on 'network-guard'
+  - 'NetworkTestScreen' is implemented in commonMain
+  - Failing request triggers 'safeApiCall'
+  - Error message is visible in the UI
+
+### Task_6_FinalVerification: Perform a final run and verification of the UI integration. Confirm that platform exceptions are correctly mapped and displayed as user-friendly strings. Instruct critic_agent to verify stability and requirement alignment.
+- **Status:** COMPLETED
+- **Updates:** The 'NetworkTestScreen' was successfully implemented and verified in the 'composeApp'. The critic_agent confirmed that both Android and iOS error mapping work as expected, providing user-friendly strings for network failures (e.g., 'No internet connection'). The 'network-guard' module remains a pure KMP library with no UI dependencies. The app is stable, follows Material Design 3 guidelines, and implements edge-to-edge display with an adaptive icon. Project is ready for use.
+- **Acceptance Criteria:**
+  - Project builds and runs successfully
+  - Error mapping is verified in the UI for both Android and iOS
+  - App does not crash
+  - 'network-guard' module remains pure KMP and isolated
 - **Duration:** N/A
 

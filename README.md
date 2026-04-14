@@ -1,35 +1,101 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Network Guardian (`network-guard`)
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Network Guardian is a pure **Kotlin Multiplatform (KMP)** library designed to provide a robust, resilient layer for network operations. It abstracts the complexities of cross-platform error handling, ensuring that both Android and iOS applications can handle API responses consistently and gracefully.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Built with **Ktor** and **Kotlin Coroutines**, this library focuses on the data layer, offering a UI-agnostic approach to network resilience.
 
-### Build and Run Android Application
+## 🚀 Features
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+*   **Safe API Call Wrapper**: A standardized `safeApiCall` function that executes network requests and automatically catches exceptions, returning a structured `NetworkResult` type.
+*   **Unified Error Mapping**: Automatically maps platform-specific exceptions (e.g., Android's `IOException` or iOS's `NSURLError`) into a shared `Sealed Interface`.
+*   **Configurable Error Strings**: Support for injecting custom `NetworkErrorProvider` implementations, allowing for localized or branded error messages.
+*   **Pure KMP Architecture**: Zero UI dependencies, making it perfect for shared data modules.
+*   **JitPack Ready**: Easy integration into any project via JitPack.
 
-### Build and Run iOS Application
+## 📦 Installation
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+To use Network Guardian in your project, add the JitPack repository and the dependency to your `build.gradle.kts` files.
 
----
+### 1. Add Repository
+In your root `settings.gradle.kts` (or `build.gradle.kts`):
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+```
+
+### 2. Add Dependency
+In your shared module's `build.gradle.kts`:
+
+```kotlin
+commonMain.dependencies {
+    implementation("com.github.andyechc:network-guardian:1.0.0")
+}
+```
+
+## 🛠 Usage
+
+### Basic `safeApiCall`
+Wrap your Ktor requests with `safeApiCall` to automatically handle exceptions and map them to a `NetworkResult`.
+
+```kotlin
+import com.andyechc.network_guard.safeApiCall
+import com.andyechc.network_guard.NetworkResult
+
+suspend fun getUserProfile(): NetworkResult<User> {
+    return safeApiCall {
+        client.get("https://api.example.com/profile").body<User>()
+    }
+}
+```
+
+### Handling the Result
+Use a `when` expression to handle the success and error states.
+
+```kotlin
+val result = getUserProfile()
+
+when (result) {
+    is NetworkResult.Success -> {
+        println("User: ${result.data.name}")
+    }
+    is NetworkResult.Error -> {
+        println("Error: ${result.message}")
+        // Accessible error types: HttpError, NetworkError, TimeoutError, etc.
+    }
+}
+```
+
+### Custom Error Messages
+Implement the `NetworkErrorProvider` interface to customize error strings for your app.
+
+```kotlin
+import com.andyechc.network_guard.NetworkErrorProvider
+
+class MyCustomErrorProvider : NetworkErrorProvider {
+    override fun getHttpErrorMessage(code: Int): String = "Server returned error $code. Please try again later."
+    override fun getNetworkErrorMessage(): String = "Please check your internet connection."
+    override fun getSerializationErrorMessage(): String = "Data processing error."
+    override fun getTimeoutErrorMessage(): String = "The request took too long."
+    override fun getUnknownErrorMessage(throwable: Throwable): String = "Something went wrong."
+}
+
+// Pass it to the safeApiCall
+val result = safeApiCall(errorProvider = MyCustomErrorProvider()) {
+    // API call
+}
+```
+
+## 📱 Platform Support
+
+| Platform | Support | Underlying Engine Mappings |
+| :--- | :---: | :--- |
+| **Android** | ✅ | `IOException`, `SocketTimeoutException` |
+| **iOS** | ✅ | `NSURLError` (via `DarwinHttpRequestException`) |
+
+## 📄 License
+This project is licensed under the MIT License.
